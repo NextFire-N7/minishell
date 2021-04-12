@@ -4,7 +4,7 @@
 #include <string.h>
 #include "readcmd.h"
 
-int main()
+int main(int argc, char const *argv[])
 {
     struct cmdline *cmd;
     char cwd[1024];
