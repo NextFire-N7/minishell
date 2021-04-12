@@ -1,30 +1,47 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <string.h>
 #include "readcmd.h"
 
-int main(int argc, char const *argv[])
+int main()
 {
     struct cmdline *cmd;
-    pid_t status;
+    char cwd[1024];
 
     while (1)
     {
-        printf(">>> ");
+        getcwd(cwd, sizeof(cwd));
+        printf("%s $ ", cwd);
         cmd = readcmd();
 
-        switch (fork())
+        if (!strcmp(cmd->seq[0][0], "cd"))
         {
-        case -1:
-            printf("ECHEC fork\n");
+            chdir(cmd->seq[0][1]);
+        }
+        else if (!strcmp(cmd->seq[0][0], "exit"))
+        {
             break;
-        case 0:
-            execvp(cmd->seq[0][0], cmd->seq[0]);
-            printf("ECHEC exec\n");
-            break;
-        default:
-            wait(&status);
-            break;
+        }
+        else
+        {
+            switch (fork())
+            {
+            case -1:
+                printf("ECHEC fork\n");
+                break;
+            case 0:
+                execvp(cmd->seq[0][0], cmd->seq[0]);
+                printf("%s\n", cmd->err);
+                return getpid();
+                break;
+            default:
+                if (!cmd->backgrounded)
+                {
+                    wait(NULL);
+                }
+                break;
+            }
         }
     }
 
