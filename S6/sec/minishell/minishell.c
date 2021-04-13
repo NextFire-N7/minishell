@@ -51,51 +51,51 @@ void fg(char **subseq) {}
 
 int builtin(char **subseq)
 {
+    int is_builtin = 1;
     if (!strcmp(subseq[0], "cd"))
     {
         chdir(subseq[1]);
-        return 1;
     }
     else if (!strcmp(subseq[0], "exit"))
     {
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     else if (!strcmp(subseq[0], "jobs"))
     {
         jobs(subseq);
-        return 1;
     }
     else if (!strcmp(subseq[0], "stop"))
     {
         stop(subseq);
-        return 1;
     }
     else if (!strcmp(subseq[0], "bg"))
     {
         bg(subseq);
-        return 1;
     }
     else if (!strcmp(subseq[0], "fg"))
     {
         fg(subseq);
-        return 1;
     }
     else
     {
-        return 0;
+        is_builtin = 0;
     }
+    return is_builtin;
 }
 
-int main()
+void main()
 {
-    struct sigaction handler_child;
+    struct sigaction handler_sigchld;
+    handler_sigchld.sa_handler = suivi_fils;
+    sigaction(SIGCHLD, &handler_sigchld, NULL);
+
     struct cmdline *cmd;
     char cwd[1024];
     int i;
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
-        printf("%s $ ", cwd);
+        printf("%s$ ", cwd);
         cmd = readcmd();
         i = -1;
         while (cmd->seq[++i] != NULL)
