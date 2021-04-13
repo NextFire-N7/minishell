@@ -83,7 +83,7 @@ int builtin(char **subseq)
     return is_builtin;
 }
 
-void main()
+int main(int argc, char const *argv[])
 {
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
@@ -120,4 +120,6 @@ void main()
             }
         }
     }
+
+    return EXIT_FAILURE; // Pas normal si on se retrouve ici...
 }
