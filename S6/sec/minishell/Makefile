@@ -1,8 +1,7 @@
-minishell: readcmd.o minishell.c
-	gcc  -o minishell readcmd.o minishell.c
+all: minishell
 
-readcmd.o: readcmd.c
-	gcc -c readcmd.c
+minishell: readcmd.c minishell.c
+	gcc -o $@ $^
 
 clean:
-	rm *.o minishell
+	rm -f minishell
