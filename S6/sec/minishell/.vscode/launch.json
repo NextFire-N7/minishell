@@ -5,23 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "gcc - Build and debug active file - macOS",
+            "name": "gcc - Build and debug minishell - macOS",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/minishell",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": true,
             "MIMode": "lldb",
-            "preLaunchTask": "C/C++: gcc build active file"
+            "preLaunchTask": "C/C++: gcc build minishell"
         },
         {
-            "name": "gcc - Build and debug active file - n7",
+            "name": "gcc - Build and debug minishell - n7",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/minishell",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -35,7 +35,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: gcc build active file",
+            "preLaunchTask": "C/C++: gcc build minishell",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ]

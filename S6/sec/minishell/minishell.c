@@ -6,6 +6,9 @@
 #include <errno.h>
 #include <signal.h>
 #include "readcmd.h"
+#include "process_list.h"
+
+struct process_list *pl;
 
 void suivi_fils(int sig)
 {
@@ -92,6 +95,7 @@ int main(int argc, char const *argv[])
     struct cmdline *cmd;
     char cwd[1024];
     int i;
+    pid_t pid_fils;
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
@@ -102,7 +106,7 @@ int main(int argc, char const *argv[])
         {
             if (!builtin(cmd->seq[i]))
             {
-                switch (fork())
+                switch (pid_fils = fork())
                 {
                 case -1:
                     printf("ECHEC fork\n");
@@ -113,6 +117,7 @@ int main(int argc, char const *argv[])
                     exit(getpid());
                     break;
                 default:
+                    pl_add(pl, pid_fils, cmd->seq[i]);
                     if (!cmd->backgrounded)
                     {
                         wait(NULL);

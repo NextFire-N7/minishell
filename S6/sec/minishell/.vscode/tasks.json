@@ -2,14 +2,15 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: gcc build active file",
+            "label": "C/C++: gcc build minishell",
             "command": "/usr/bin/gcc",
             "args": [
                 "-g",
-                "${fileDirname}/readcmd.c",
-                "${file}",
+                "readcmd.c",
+                "process_list.c",
+                "minishell.c",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "minishell"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
