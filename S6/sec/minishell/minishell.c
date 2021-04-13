@@ -111,11 +111,13 @@ int main(int argc, char const *argv[])
                     execvp(cmd->seq[i][0], cmd->seq[i]);
                     printf("%s\n", cmd->err);
                     exit(getpid());
+                    break;
                 default:
                     if (!cmd->backgrounded)
                     {
                         wait(NULL);
                     }
+                    break;
                 }
             }
         }
