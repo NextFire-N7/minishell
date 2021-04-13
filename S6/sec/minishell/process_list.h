@@ -3,15 +3,17 @@
 
 #include <stdlib.h>
 
+extern struct process_list *pl;
+
 struct process_list
 {
     int id;
     pid_t pid;
     int running;
-    char **cmd;
+    char *cmd;
     struct process_list *next;
 };
 
-void pl_add(struct process_list *pl, pid_t pid, char **cmd);
+void pl_add(pid_t pid, char **cmd);
 
 #endif
