@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <signal.h>
 #include "readcmd.h"
 
 void suivi_fils(int sig)
@@ -87,6 +88,7 @@ int builtin(char **subseq)
 
 int main()
 {
+    struct sigaction handler_child;
     struct cmdline *cmd;
     char cwd[1024];
     int i;
