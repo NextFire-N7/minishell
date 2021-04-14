@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "processlist.h"
+#include "process.h"
 
 void jobs(char **cmd) {}
 
@@ -13,7 +13,7 @@ void bg(char **cmd) {}
 
 void fg(char **cmd) {}
 
-int builtin(char **cmd, struct process_list *pl)
+int builtin(struct process **pl, char **cmd)
 {
     int is_builtin = 1;
     if (!strcmp(cmd[0], "cd"))
@@ -22,7 +22,6 @@ int builtin(char **cmd, struct process_list *pl)
     }
     else if (!strcmp(cmd[0], "exit"))
     {
-        pl_free(pl);
         exit(EXIT_SUCCESS);
     }
     else if (!strcmp(cmd[0], "jobs"))

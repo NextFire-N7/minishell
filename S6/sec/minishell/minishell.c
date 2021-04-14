@@ -6,9 +6,9 @@
 #include <signal.h>
 #include "readcmd.h"
 #include "builtin.h"
-#include "processlist.h"
+#include "process.h"
 
-struct process_list *pl;
+struct process *pl = NULL;
 
 void suivi_fils(int sig)
 {
@@ -46,8 +46,6 @@ void suivi_fils(int sig)
 
 int main(int argc, char const *argv[])
 {
-    pl = malloc(sizeof(struct process_list));
-
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
     sigaction(SIGCHLD, &handler_sigchld, NULL);
@@ -60,20 +58,22 @@ int main(int argc, char const *argv[])
         getcwd(cwd, sizeof(cwd));
         printf("%s$ ", cwd);
         cmd = readcmd();
-        if (!builtin(cmd->seq[0], pl))
+        if (!builtin(&pl, cmd->seq[0]))
         {
             switch (pid_fils = fork())
             {
             case -1:
-                puts("ECHEC fork");
+                perror("fork");
                 break;
+
             case 0:
                 execvp(cmd->seq[0][0], cmd->seq[0]);
                 printf("%s\n", cmd->err);
                 exit(getpid());
                 break;
+
             default:
-                pl_add(pl, pid_fils, cmd->seq[0]);
+                pl_add(&pl, pid_fils, cmd->seq[0]);
                 if (!cmd->backgrounded)
                 {
                     wait(NULL);

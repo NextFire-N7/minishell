@@ -1,7 +1,7 @@
 #ifndef BUILTIN
 #define BUILTIN
-#include "processlist.h"
+#include "process.h"
 
-int builtin(char **cmd, struct process_list *pl);
+int builtin(struct process **pl, char **cmd);
 
 #endif

@@ -1,4 +1,4 @@
-#include "processlist.h"
+#include "process.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,21 +17,21 @@ char *cmd_to_string(char **cmd)
     return string;
 }
 
-void pl_add(struct process_list *pl, pid_t pid, char **cmd)
+void pl_add(struct process **pl, pid_t pid, char **cmd)
 {
-    struct process_list *p = malloc(sizeof(struct process_list));
+    struct process *p = malloc(sizeof(struct process));
     p->pid = pid;
     p->running = 1;
     p->cmd = cmd_to_string(cmd);
     p->next = NULL;
-    if (!pl->id)
+    if (!*pl)
     {
         p->id = 1;
-        *pl = *p;
+        *pl = p;
     }
     else
     {
-        struct process_list *cursor = pl;
+        struct process *cursor = *pl;
         while (cursor->next)
         {
             cursor = cursor->next;
@@ -39,14 +39,4 @@ void pl_add(struct process_list *pl, pid_t pid, char **cmd)
         p->id = cursor->id + 1;
         cursor->next = p;
     }
-}
-
-void pl_free(struct process_list *pl)
-{
-    if (pl->next)
-    {
-        pl_free(pl->next);
-    }
-    free(pl);
-    pl = NULL;
 }
