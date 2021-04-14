@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <signal.h>
 #include "readcmd.h"
+#include "builtin.h"
 #include "processlist.h"
 
-struct process_list pl;
+struct process_list *pl;
 
 void suivi_fils(int sig)
 {
@@ -44,50 +44,10 @@ void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
-void jobs(char **cmd) {}
-
-void stop(char **cmd) {}
-
-void bg(char **cmd) {}
-
-void fg(char **cmd) {}
-
-int builtin(char **cmd)
-{
-    int is_builtin = 1;
-    if (!strcmp(cmd[0], "cd"))
-    {
-        chdir(cmd[1]);
-    }
-    else if (!strcmp(cmd[0], "exit"))
-    {
-        exit(EXIT_SUCCESS);
-    }
-    else if (!strcmp(cmd[0], "jobs"))
-    {
-        jobs(cmd);
-    }
-    else if (!strcmp(cmd[0], "stop"))
-    {
-        stop(cmd);
-    }
-    else if (!strcmp(cmd[0], "bg"))
-    {
-        bg(cmd);
-    }
-    else if (!strcmp(cmd[0], "fg"))
-    {
-        fg(cmd);
-    }
-    else
-    {
-        is_builtin = 0;
-    }
-    return is_builtin;
-}
-
 int main(int argc, char const *argv[])
 {
+    pl = malloc(sizeof(struct process_list));
+
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
     sigaction(SIGCHLD, &handler_sigchld, NULL);
@@ -100,7 +60,7 @@ int main(int argc, char const *argv[])
         getcwd(cwd, sizeof(cwd));
         printf("%s$ ", cwd);
         cmd = readcmd();
-        if (!builtin(cmd->seq[0]))
+        if (!builtin(cmd->seq[0], pl))
         {
             switch (pid_fils = fork())
             {
@@ -113,7 +73,7 @@ int main(int argc, char const *argv[])
                 exit(getpid());
                 break;
             default:
-                pl_add(&pl, pid_fils, cmd->seq[0]);
+                pl_add(pl, pid_fils, cmd->seq[0]);
                 if (!cmd->backgrounded)
                 {
                     wait(NULL);
@@ -123,5 +83,5 @@ int main(int argc, char const *argv[])
         }
     }
 
-    return EXIT_FAILURE; // Pas normal si on se retrouve ici...
+    return 1; // Pas normal si on se retrouve ici...
 }

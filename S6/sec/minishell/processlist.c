@@ -4,7 +4,17 @@
 
 char *cmd_to_string(char **cmd)
 {
-    return NULL;
+    char *string = NULL;
+    for (int i = 0; cmd[i] != 0; i++)
+    {
+        if (string)
+        {
+            strcat(string, " ");
+        }
+        string = realloc(string, (strlen(cmd[i]) + 1) * sizeof(char));
+        strcat(string, cmd[i]);
+    }
+    return string;
 }
 
 void pl_add(struct process_list *pl, pid_t pid, char **cmd)
@@ -38,4 +48,5 @@ void pl_free(struct process_list *pl)
         pl_free(pl->next);
     }
     free(pl);
+    pl = NULL;
 }
