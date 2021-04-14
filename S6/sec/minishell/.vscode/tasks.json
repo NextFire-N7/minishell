@@ -7,7 +7,7 @@
             "args": [
                 "-g",
                 "readcmd.c",
-                "process_list.c",
+                "processlist.c",
                 "minishell.c",
                 "-o",
                 "minishell"

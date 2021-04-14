@@ -1,5 +1,5 @@
-#ifndef PROCESS_LIST
-#define PROCESS_LIST
+#ifndef PROCESSLIST
+#define PROCESSLIST
 
 #include <stdlib.h>
 

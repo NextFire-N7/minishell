@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 #include "readcmd.h"
-#include "process_list.h"
+#include "processlist.h"
 
 struct process_list *pl = NULL;
 

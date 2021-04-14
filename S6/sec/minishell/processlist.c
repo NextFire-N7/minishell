@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "process_list.h"
+#include "processlist.h"
 
 char *cmd_to_string(char **cmd)
 {

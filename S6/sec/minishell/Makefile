@@ -1,6 +1,6 @@
 all: minishell
 
-minishell: readcmd.c process_list.c minishell.c
+minishell: readcmd.c processlist.c minishell.c
 	gcc -o $@ $^
 
 clean:
