@@ -7,7 +7,7 @@ char *cmd_to_string(char **cmd)
     return NULL;
 }
 
-void pl_add(pid_t pid, char **cmd)
+void pl_add(struct process_list *pl, pid_t pid, char **cmd)
 {
     struct process_list *p = malloc(sizeof(struct process_list));
     p->pid = pid;

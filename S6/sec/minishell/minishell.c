@@ -44,40 +44,40 @@ void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
-void jobs(char **subseq) {}
+void jobs(char **cmd) {}
 
-void stop(char **subseq) {}
+void stop(char **cmd) {}
 
-void bg(char **subseq) {}
+void bg(char **cmd) {}
 
-void fg(char **subseq) {}
+void fg(char **cmd) {}
 
-int builtin(char **subseq)
+int builtin(char **cmd)
 {
     int is_builtin = 1;
-    if (!strcmp(subseq[0], "cd"))
+    if (!strcmp(cmd[0], "cd"))
     {
-        chdir(subseq[1]);
+        chdir(cmd[1]);
     }
-    else if (!strcmp(subseq[0], "exit"))
+    else if (!strcmp(cmd[0], "exit"))
     {
         exit(EXIT_SUCCESS);
     }
-    else if (!strcmp(subseq[0], "jobs"))
+    else if (!strcmp(cmd[0], "jobs"))
     {
-        jobs(subseq);
+        jobs(cmd);
     }
-    else if (!strcmp(subseq[0], "stop"))
+    else if (!strcmp(cmd[0], "stop"))
     {
-        stop(subseq);
+        stop(cmd);
     }
-    else if (!strcmp(subseq[0], "bg"))
+    else if (!strcmp(cmd[0], "bg"))
     {
-        bg(subseq);
+        bg(cmd);
     }
-    else if (!strcmp(subseq[0], "fg"))
+    else if (!strcmp(cmd[0], "fg"))
     {
-        fg(subseq);
+        fg(cmd);
     }
     else
     {
@@ -113,7 +113,7 @@ int main(int argc, char const *argv[])
                 exit(getpid());
                 break;
             default:
-                pl_add(pid_fils, cmd->seq[0]);
+                pl_add(pl, pid_fils, cmd->seq[0]);
                 if (!cmd->backgrounded)
                 {
                     wait(NULL);
