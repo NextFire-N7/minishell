@@ -8,7 +8,7 @@
 #include "readcmd.h"
 #include "processlist.h"
 
-struct process_list *pl = NULL;
+struct process_list pl;
 
 void suivi_fils(int sig)
 {
@@ -113,7 +113,7 @@ int main(int argc, char const *argv[])
                 exit(getpid());
                 break;
             default:
-                pl_add(pl, pid_fils, cmd->seq[0]);
+                pl_add(&pl, pid_fils, cmd->seq[0]);
                 if (!cmd->backgrounded)
                 {
                     wait(NULL);
