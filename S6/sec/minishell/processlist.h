@@ -14,4 +14,6 @@ struct process_list
 
 void pl_add(struct process_list *pl, pid_t pid, char **cmd);
 
+void pl_free(struct process_list *pl);
+
 #endif

@@ -1,6 +1,6 @@
+#include "processlist.h"
 #include <stdlib.h>
 #include <string.h>
-#include "processlist.h"
 
 char *cmd_to_string(char **cmd)
 {
@@ -28,5 +28,12 @@ void pl_add(struct process_list *pl, pid_t pid, char **cmd)
         }
         p->id = cursor->id + 1;
         cursor->next = p;
+    }
+}
+
+void pl_free(struct process_list *pl)
+{
+    if (!pl->next)
+    {
     }
 }
