@@ -9,15 +9,15 @@ char *cmd_to_string(char **cmd)
 
 void pl_add(struct process_list *pl, pid_t pid, char **cmd)
 {
-    struct process_list p;
-    p.pid = pid;
-    p.running = 1;
-    p.cmd = cmd_to_string(cmd);
-    p.next = NULL;
+    struct process_list *p = malloc(sizeof(struct process_list));
+    p->pid = pid;
+    p->running = 1;
+    p->cmd = cmd_to_string(cmd);
+    p->next = NULL;
     if (!pl->id)
     {
-        p.id = 1;
-        *pl = p;
+        p->id = 1;
+        *pl = *p;
     }
     else
     {
@@ -26,7 +26,7 @@ void pl_add(struct process_list *pl, pid_t pid, char **cmd)
         {
             cursor = cursor->next;
         }
-        p.id = cursor->id + 1;
-        cursor->next = &p;
+        p->id = cursor->id + 1;
+        cursor->next = p;
     }
 }
