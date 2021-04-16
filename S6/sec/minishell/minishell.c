@@ -26,14 +26,17 @@ void suivi_fils(int sig)
             if (WIFSTOPPED(etat_fils))
             {
                 /* traiter la suspension */
+                pl_set_is_running(&pl, pid_fils, SUSPENDED);
             }
             else if (WIFCONTINUED(etat_fils))
             {
                 /* traiter la reprise */
+                pl_set_is_running(&pl, pid_fils, RUNNING);
             }
             else if (WIFEXITED(etat_fils))
             {
                 /* traiter exit */
+                pl_remove(&pl, pid_fils);
             }
             else if (WIFSIGNALED(etat_fils))
             {
