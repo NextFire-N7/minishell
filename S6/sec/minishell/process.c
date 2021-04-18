@@ -17,7 +17,7 @@ char *cmd_to_string(char **cmd)
     return string;
 }
 
-void pl_add(struct process **pl, pid_t pid, char **cmd)
+int pl_add(struct process **pl, pid_t pid, char **cmd)
 {
     struct process *p = malloc(sizeof(struct process));
     p->pid = pid;
@@ -39,6 +39,7 @@ void pl_add(struct process **pl, pid_t pid, char **cmd)
         p->id = cursor->id + 1;
         cursor->next = p;
     }
+    return p->id;
 }
 
 void pl_remove(struct process **pl, pid_t pid)

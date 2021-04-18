@@ -41,6 +41,7 @@ void suivi_fils(int sig)
             else if (WIFSIGNALED(etat_fils))
             {
                 /* traiter signal */
+                pl_remove(&pl, pid_fils);
             }
         }
     } while (pid_fils > 0);
@@ -59,8 +60,16 @@ int main(int argc, char const *argv[])
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
-        printf("%s$ ", cwd);
-        cmd = readcmd();
+
+        do
+        {
+            printf("%s$ ", cwd);
+            do
+            {
+                cmd = readcmd();
+            } while (!cmd);
+        } while (!cmd->seq[0]);
+
         if (!builtin(&pl, cmd->seq[0]))
         {
             switch (pid_fils = fork())
@@ -76,12 +85,18 @@ int main(int argc, char const *argv[])
                 break;
 
             default:
-                pl_add(&pl, pid_fils, cmd->seq[0]);
-                if (!cmd->backgrounded)
+            {
+                int id = pl_add(&pl, pid_fils, cmd->seq[0]);
+                if (cmd->backgrounded)
+                {
+                    printf("[%d] %d\n", id, pid_fils);
+                }
+                else
                 {
                     wait(NULL);
                 }
                 break;
+            }
             }
         }
     }

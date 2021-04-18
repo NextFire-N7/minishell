@@ -15,7 +15,7 @@ struct process
     struct process *next;
 };
 
-void pl_add(struct process **pl, pid_t pid, char **cmd);
+int pl_add(struct process **pl, pid_t pid, char **cmd);
 
 void pl_remove(struct process **pl, pid_t pid);
 

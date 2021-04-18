@@ -3,9 +3,29 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 #include "process.h"
 
-void jobs(char **cmd) {}
+void jobs(struct process **pl, char **cmd)
+{
+    struct process *curseur = *pl;
+    puts("ID\tPID\tSTATE\tCOMMAND");
+    while (curseur != NULL)
+    {
+        printf("%d\t", curseur->id);
+        printf("%d\t", curseur->pid);
+        if (curseur->is_running)
+        {
+            printf("ACTIVE\t");
+        }
+        else
+        {
+            printf("SUSPENDED\t");
+        }
+        printf("%s\n", curseur->cmd);
+        curseur = curseur->next;
+    }
+}
 
 void stop(char **cmd) {}
 
@@ -26,7 +46,7 @@ int builtin(struct process **pl, char **cmd)
     }
     else if (!strcmp(cmd[0], "jobs"))
     {
-        jobs(cmd);
+        jobs(pl, cmd);
     }
     else if (!strcmp(cmd[0], "stop"))
     {
