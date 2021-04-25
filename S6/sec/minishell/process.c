@@ -4,15 +4,12 @@
 
 char *cmd_to_string(char **cmd)
 {
-    char *string = NULL;
-    for (int i = 0; cmd[i] != 0; i++)
+    char *string = malloc((strlen(cmd[0]) + 1) * sizeof(char));
+    strcpy(string, cmd[0]);
+    for (int i = 1; cmd[i]; i++)
     {
-        if (string)
-        {
-            strcat(string, " ");
-        }
-        string = realloc(string, (strlen(cmd[i]) + 1) * sizeof(char));
-        strcat(string, cmd[i]);
+        string = realloc(string, (strlen(cmd[i]) + 2) * sizeof(char));
+        strcat(strcat(string, " "), cmd[i]);
     }
     return string;
 }

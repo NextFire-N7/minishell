@@ -16,11 +16,11 @@ void jobs(struct process **pl, char **cmd)
         printf("%d\t", curseur->pid);
         if (curseur->is_running)
         {
-            printf("ACTIVE\t");
+            printf("Running\t");
         }
         else
         {
-            printf("SUSPENDED\t");
+            printf("Stopped\t");
         }
         printf("%s\n", curseur->cmd);
         curseur = curseur->next;
