@@ -27,12 +27,16 @@ void suivi_fils(int sig)
             if (WIFSTOPPED(etat_fils))
             {
                 /* traiter la suspension */
-                pl_set_is_running(&pl, pid_fils, STOPPED);
+                struct process **p_stopped = pl_get_pid(&pl, pid_fils);
+                (*p_stopped)->is_running = STOPPED;
+                printf("[%d] %d: %s — Stopped\n", (*p_stopped)->id, (*p_stopped)->pid, (*p_stopped)->cmd);
             }
             else if (WIFCONTINUED(etat_fils))
             {
                 /* traiter la reprise */
-                pl_set_is_running(&pl, pid_fils, RUNNING);
+                struct process **p_started = pl_get_pid(&pl, pid_fils);
+                (*p_started)->is_running = RUNNING;
+                printf("[%d] %d: %s\n", (*p_started)->id, (*p_started)->pid, (*p_started)->cmd);
             }
             else if (WIFEXITED(etat_fils))
             {
@@ -56,10 +60,14 @@ void fwd_sig(int sig)
 
 int main(int argc, char const *argv[])
 {
-    struct sigaction handler_fwd_sig;
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
     sigaction(SIGCHLD, &handler_sigchld, NULL);
+
+    struct sigaction handler_fwd_sig;
+    handler_fwd_sig.sa_handler = fwd_sig;
+    sigaction(SIGTSTP, &handler_fwd_sig, NULL);
+    sigaction(SIGSTOP, &handler_fwd_sig, NULL);
 
     struct cmdline *cmd;
     char cwd[1024];
@@ -67,11 +75,6 @@ int main(int argc, char const *argv[])
     {
         getcwd(cwd, sizeof(cwd));
         printf("%s$ ", cwd);
-
-        handler_fwd_sig.sa_handler = SIG_DFL;
-        sigaction(SIGTSTP, &handler_fwd_sig, NULL);
-        sigaction(SIGSTOP, &handler_fwd_sig, NULL);
-
         do
         {
             cmd = readcmd();
@@ -100,9 +103,6 @@ int main(int argc, char const *argv[])
                 }
                 else
                 {
-                    handler_fwd_sig.sa_handler = fwd_sig;
-                    sigaction(SIGTSTP, &handler_fwd_sig, NULL);
-                    sigaction(SIGSTOP, &handler_fwd_sig, NULL);
                     waitpid(pid_fils, NULL, NULL);
                 }
                 break;

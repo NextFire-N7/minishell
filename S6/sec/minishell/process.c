@@ -47,20 +47,20 @@ void pl_remove(struct process **pl, pid_t pid)
     }
 }
 
-void pl_set_is_running(struct process **pl, pid_t pid, int is_running)
-{
-    if ((*pl)->pid != pid)
-    {
-        pl_set_is_running(&(*pl)->prec, pid, is_running);
-    }
-    (*pl)->is_running = is_running;
-}
-
 struct process **pl_get_id(struct process **pl, int id)
 {
     if ((*pl)->id != id)
     {
         pl_get_id(&(*pl)->prec, id);
+    }
+    return pl;
+}
+
+struct process **pl_get_pid(struct process **pl, pid_t pid)
+{
+    if ((*pl)->pid != pid)
+    {
+        pl_get_pid(&(*pl)->prec, pid);
     }
     return pl;
 }

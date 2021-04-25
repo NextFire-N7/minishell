@@ -15,7 +15,7 @@ void jobs(struct process **pl, char **cmd)
     {
         printf("%d\t", curseur->id);
         printf("%d\t", curseur->pid);
-        (curseur->is_running) ? printf("Running\t") : printf("Stopped\t");
+        printf((curseur->is_running) ? "Running\t" : "Stopped\t");
         printf("%s\n", curseur->cmd);
         curseur = curseur->prec;
     }
@@ -25,21 +25,20 @@ void stop(struct process **pl, char **cmd)
 {
     struct process **p_to_stop = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_stop)->pid, SIGSTOP);
-    printf("[%d] %d Stopped\n", (*p_to_stop)->id, (*p_to_stop)->pid);
 }
 
 void bg(struct process **pl, char **cmd)
 {
     struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_bg)->pid, SIGCONT);
-    printf("[%d] %s &\n", (*p_to_bg)->id, (*p_to_bg)->cmd);
+    printf("[%d] %d: %s &\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
 }
 
 void fg(struct process **pl, char **cmd)
 {
     struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_bg)->pid, SIGCONT);
-    printf("%s\n", (*p_to_bg)->cmd);
+    printf("[%d] %d: %s\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
     waitpid((*p_to_bg)->pid, NULL, NULL);
 }
 
