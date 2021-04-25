@@ -9,6 +9,7 @@
 #include "process.h"
 
 struct process *pl = NULL;
+pid_t pid_fils;
 
 void suivi_fils(int sig)
 {
@@ -26,7 +27,7 @@ void suivi_fils(int sig)
             if (WIFSTOPPED(etat_fils))
             {
                 /* traiter la suspension */
-                pl_set_is_running(&pl, pid_fils, SUSPENDED);
+                pl_set_is_running(&pl, pid_fils, STOPPED);
             }
             else if (WIFCONTINUED(etat_fils))
             {
@@ -48,27 +49,33 @@ void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
+void fwd_sig(int sig)
+{
+    kill(pid_fils, sig);
+}
+
 int main(int argc, char const *argv[])
 {
+    struct sigaction handler_fwd_sig;
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
     sigaction(SIGCHLD, &handler_sigchld, NULL);
 
     struct cmdline *cmd;
     char cwd[1024];
-    pid_t pid_fils;
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
+        printf("%s$ ", cwd);
+
+        handler_fwd_sig.sa_handler = SIG_DFL;
+        sigaction(SIGTSTP, &handler_fwd_sig, NULL);
+        sigaction(SIGSTOP, &handler_fwd_sig, NULL);
 
         do
         {
-            printf("%s$ ", cwd);
-            do
-            {
-                cmd = readcmd();
-            } while (!cmd);
-        } while (!cmd->seq[0]);
+            cmd = readcmd();
+        } while (!cmd || !cmd->seq[0]);
 
         if (!builtin(&pl, cmd->seq[0]))
         {
@@ -93,7 +100,10 @@ int main(int argc, char const *argv[])
                 }
                 else
                 {
-                    wait(NULL);
+                    handler_fwd_sig.sa_handler = fwd_sig;
+                    sigaction(SIGTSTP, &handler_fwd_sig, NULL);
+                    sigaction(SIGSTOP, &handler_fwd_sig, NULL);
+                    waitpid(pid_fils, NULL, NULL);
                 }
                 break;
             }

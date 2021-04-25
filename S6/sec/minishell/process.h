@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define RUNNING 1
-#define SUSPENDED 0
+#define STOPPED 0
 
 struct process
 {
@@ -12,7 +12,7 @@ struct process
     pid_t pid;
     int is_running;
     char *cmd;
-    struct process *next;
+    struct process *prec;
 };
 
 int pl_add(struct process **pl, pid_t pid, char **cmd);
@@ -20,5 +20,7 @@ int pl_add(struct process **pl, pid_t pid, char **cmd);
 void pl_remove(struct process **pl, pid_t pid);
 
 void pl_set_is_running(struct process **pl, pid_t pid, int is_running);
+
+struct process **pl_get_id(struct process **pl, int id);
 
 #endif

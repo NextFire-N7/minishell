@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include "process.h"
 
 void jobs(struct process **pl, char **cmd)
@@ -14,24 +15,33 @@ void jobs(struct process **pl, char **cmd)
     {
         printf("%d\t", curseur->id);
         printf("%d\t", curseur->pid);
-        if (curseur->is_running)
-        {
-            printf("Running\t");
-        }
-        else
-        {
-            printf("Stopped\t");
-        }
+        (curseur->is_running) ? printf("Running\t") : printf("Stopped\t");
         printf("%s\n", curseur->cmd);
-        curseur = curseur->next;
+        curseur = curseur->prec;
     }
 }
 
-void stop(char **cmd) {}
+void stop(struct process **pl, char **cmd)
+{
+    struct process **p_to_stop = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
+    kill((*p_to_stop)->pid, SIGSTOP);
+    printf("[%d] %d Stopped\n", (*p_to_stop)->id, (*p_to_stop)->pid);
+}
 
-void bg(char **cmd) {}
+void bg(struct process **pl, char **cmd)
+{
+    struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
+    kill((*p_to_bg)->pid, SIGCONT);
+    printf("[%d] %s &\n", (*p_to_bg)->id, (*p_to_bg)->cmd);
+}
 
-void fg(char **cmd) {}
+void fg(struct process **pl, char **cmd)
+{
+    struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
+    kill((*p_to_bg)->pid, SIGCONT);
+    printf("%s\n", (*p_to_bg)->cmd);
+    waitpid((*p_to_bg)->pid, NULL, NULL);
+}
 
 int builtin(struct process **pl, char **cmd)
 {
@@ -50,15 +60,15 @@ int builtin(struct process **pl, char **cmd)
     }
     else if (!strcmp(cmd[0], "stop"))
     {
-        stop(cmd);
+        stop(pl, cmd);
     }
     else if (!strcmp(cmd[0], "bg"))
     {
-        bg(cmd);
+        bg(pl, cmd);
     }
     else if (!strcmp(cmd[0], "fg"))
     {
-        fg(cmd);
+        fg(pl, cmd);
     }
     else
     {

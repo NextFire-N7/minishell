@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+int id = 1;
+
 char *cmd_to_string(char **cmd)
 {
     char *string = malloc((strlen(cmd[0]) + 1) * sizeof(char));
@@ -17,43 +19,30 @@ char *cmd_to_string(char **cmd)
 int pl_add(struct process **pl, pid_t pid, char **cmd)
 {
     struct process *p = malloc(sizeof(struct process));
+    p->id = id++;
     p->pid = pid;
     p->is_running = RUNNING;
     p->cmd = cmd_to_string(cmd);
-    p->next = NULL;
-    if (!*pl)
-    {
-        p->id = 1;
-        *pl = p;
-    }
-    else
-    {
-        struct process *cursor = *pl;
-        while (cursor->next)
-        {
-            cursor = cursor->next;
-        }
-        p->id = cursor->id + 1;
-        cursor->next = p;
-    }
+    p->prec = *pl;
+    *pl = p;
     return p->id;
 }
 
 void pl_remove(struct process **pl, pid_t pid)
 {
-    if (!(*pl)->next)
+    if (!(*pl)->prec)
     {
         free(*pl);
         *pl = NULL;
     }
     else
     {
-        if ((*pl)->next->pid != pid)
+        if ((*pl)->prec->pid != pid)
         {
-            pl_remove(&(*pl)->next, pid);
+            pl_remove(&(*pl)->prec, pid);
         }
-        struct process *to_free = (*pl)->next;
-        (*pl)->next = to_free->next;
+        struct process *to_free = (*pl)->prec;
+        (*pl)->prec = to_free->prec;
         free(to_free);
     }
 }
@@ -62,7 +51,16 @@ void pl_set_is_running(struct process **pl, pid_t pid, int is_running)
 {
     if ((*pl)->pid != pid)
     {
-        pl_set_is_running(&(*pl)->next, pid, is_running);
+        pl_set_is_running(&(*pl)->prec, pid, is_running);
     }
     (*pl)->is_running = is_running;
+}
+
+struct process **pl_get_id(struct process **pl, int id)
+{
+    if ((*pl)->id != id)
+    {
+        pl_get_id(&(*pl)->prec, id);
+    }
+    return pl;
 }
