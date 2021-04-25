@@ -36,7 +36,7 @@ void suivi_fils(int sig)
                 /* traiter la reprise */
                 struct process **p_started = pl_get_pid(&pl, pid_fils);
                 (*p_started)->is_running = RUNNING;
-                printf("[%d] %d: %s\n", (*p_started)->id, (*p_started)->pid, (*p_started)->cmd);
+                printf("[%d] %d: %s — Running\n", (*p_started)->id, (*p_started)->pid, (*p_started)->cmd);
             }
             else if (WIFEXITED(etat_fils))
             {

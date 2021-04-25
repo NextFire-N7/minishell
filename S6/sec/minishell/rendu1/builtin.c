@@ -31,7 +31,6 @@ void bg(struct process **pl, char **cmd)
 {
     struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_bg)->pid, SIGCONT);
-    (*p_to_bg)->is_running = RUNNING;
     printf("[%d] %d: %s &\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
 }
 
@@ -39,7 +38,6 @@ void fg(struct process **pl, char **cmd)
 {
     struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_bg)->pid, SIGCONT);
-    (*p_to_bg)->is_running = RUNNING;
     printf("[%d] %d: %s\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
     waitpid((*p_to_bg)->pid, NULL, NULL);
 }
