@@ -41,7 +41,7 @@ void fg(struct process **pl, char **cmd)
     kill((*p_to_bg)->pid, SIGCONT);
     (*p_to_bg)->is_running = RUNNING;
     printf("[%d] %d: %s\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
-    waitpid((*p_to_bg)->pid, NULL, NULL);
+    waitpid((*p_to_bg)->pid, NULL, 0);
 }
 
 int builtin(struct process **pl, char **cmd)

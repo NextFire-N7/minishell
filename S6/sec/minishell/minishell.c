@@ -103,7 +103,7 @@ int main(int argc, char const *argv[])
                 }
                 else
                 {
-                    waitpid(pid_fils, NULL, NULL);
+                    waitpid(pid_fils, NULL, 0);
                 }
                 break;
             }
