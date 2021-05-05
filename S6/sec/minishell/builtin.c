@@ -13,10 +13,7 @@ void jobs(struct process **pl, char **cmd)
     puts("ID\tPID\tSTATE\tCOMMAND");
     while (curseur != NULL)
     {
-        printf("%d\t", curseur->id);
-        printf("%d\t", curseur->pid);
-        printf((curseur->is_running) ? "Running\t" : "Stopped\t");
-        printf("%s\n", curseur->cmd);
+        printf("%d\t%d\t%s\t%s\n", curseur->id, curseur->pid, (curseur->is_running) ? "Running" : "Stopped", curseur->cmd);
         curseur = curseur->prec;
     }
 }
@@ -47,27 +44,27 @@ void fg(struct process **pl, char **cmd)
 int builtin(struct process **pl, char **cmd)
 {
     int is_builtin = 1;
-    if (!strcmp(cmd[0], "cd"))
+    if (strcmp(cmd[0], "cd") == 0)
     {
         chdir(cmd[1]);
     }
-    else if (!strcmp(cmd[0], "exit"))
+    else if (strcmp(cmd[0], "exit") == 0)
     {
         exit(EXIT_SUCCESS);
     }
-    else if (!strcmp(cmd[0], "jobs"))
+    else if (strcmp(cmd[0], "jobs") == 0)
     {
         jobs(pl, cmd);
     }
-    else if (!strcmp(cmd[0], "stop"))
+    else if (strcmp(cmd[0], "stop") == 0)
     {
         stop(pl, cmd);
     }
-    else if (!strcmp(cmd[0], "bg"))
+    else if (strcmp(cmd[0], "bg") == 0)
     {
         bg(pl, cmd);
     }
-    else if (!strcmp(cmd[0], "fg"))
+    else if (strcmp(cmd[0], "fg") == 0)
     {
         fg(pl, cmd);
     }
