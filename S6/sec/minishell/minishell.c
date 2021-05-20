@@ -10,6 +10,7 @@
 
 struct process *pl = NULL;
 pid_t pid_fils;
+int prompt;
 
 void suivi_fils(int sig)
 {
@@ -24,6 +25,7 @@ void suivi_fils(int sig)
         }
         else if (pid_fils > 0)
         {
+            printf("suivi_fils %d\n", pid_fils);
             if (WIFSTOPPED(etat_fils))
             {
                 /* traiter la suspension */
@@ -53,31 +55,52 @@ void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
-void fwd_sig(int sig)
+void fwd_sig_stop(int sig)
 {
-    kill(pid_fils, sig);
+    if (!prompt)
+    {
+        printf("fwd_sig_stop %d\n", pid_fils);
+        kill(pid_fils, SIGSTOP);
+    }
+}
+
+void fwd_sig_kill(int sig)
+{
+    if (!prompt)
+    {
+        printf("fwd_sig_kill %d\n", pid_fils);
+        kill(pid_fils, SIGKILL);
+    }
 }
 
 int main(int argc, char const *argv[])
 {
     struct sigaction handler_sigchld;
     handler_sigchld.sa_handler = suivi_fils;
+    struct sigaction handler_fwd_stop;
+    handler_fwd_stop.sa_handler = fwd_sig_stop;
+    struct sigaction handler_fwd_kill;
+    handler_fwd_kill.sa_handler = fwd_sig_kill;
+    struct sigaction handler_mask;
+    handler_mask.sa_handler = SIG_IGN;
 
-    struct sigaction handler_fwd_sig;
-    handler_fwd_sig.sa_handler = fwd_sig;
-    sigaction(SIGTSTP, &handler_fwd_sig, NULL);
-    sigaction(SIGSTOP, &handler_fwd_sig, NULL);
+    sigaction(SIGCHLD, &handler_sigchld, NULL);
+    sigaction(SIGTSTP, &handler_fwd_stop, NULL);
+    sigaction(SIGINT, &handler_fwd_kill, NULL);
 
+    int id;
     struct cmdline *cmd;
     char cwd[1024];
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
         printf("%s$ ", cwd);
+        prompt = 1;
         do
         {
             cmd = readcmd();
         } while (!cmd || !cmd->seq[0]);
+        prompt = 0;
 
         if (!builtin(&pl, cmd->seq[0]))
         {
@@ -88,6 +111,8 @@ int main(int argc, char const *argv[])
                 break;
 
             case 0:
+                sigaction(SIGTSTP, &handler_mask, NULL);
+                sigaction(SIGINT, &handler_mask, NULL);
                 execvp(cmd->seq[0][0], cmd->seq[0]);
                 printf("%s\n", cmd->err);
                 exit(getpid());
@@ -95,15 +120,14 @@ int main(int argc, char const *argv[])
 
             default:
             {
-                sigaction(SIGCHLD, &handler_sigchld, NULL);
-                int id = pl_add(&pl, pid_fils, cmd->seq[0]);
+                id = pl_add(&pl, pid_fils, cmd->seq[0]);
                 if (cmd->backgrounded)
                 {
                     printf("[%d] %d\n", id, pid_fils);
                 }
                 else
                 {
-                    waitpid(pid_fils, NULL, 0);
+                    pause();
                 }
                 break;
             }
