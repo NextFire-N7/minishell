@@ -25,9 +25,9 @@ void suivi_fils(int sig)
         }
         else if (pid_fils > 0)
         {
-            printf("suivi_fils %d\n", pid_fils);
             if (WIFSTOPPED(etat_fils))
             {
+                // printf("WIFSTOPPED %d\n", pid_fils);
                 /* traiter la suspension */
                 struct process **p_stopped = pl_get_pid(&pl, pid_fils);
                 (*p_stopped)->is_running = STOPPED;
@@ -35,6 +35,7 @@ void suivi_fils(int sig)
             }
             else if (WIFCONTINUED(etat_fils))
             {
+                // printf("WIFCONTINUED %d\n", pid_fils);
                 /* traiter la reprise */
                 struct process **p_started = pl_get_pid(&pl, pid_fils);
                 (*p_started)->is_running = RUNNING;
@@ -42,11 +43,13 @@ void suivi_fils(int sig)
             }
             else if (WIFEXITED(etat_fils))
             {
+                // printf("WIFEXITED %d\n", pid_fils);
                 /* traiter exit */
                 pl_remove(&pl, pid_fils);
             }
             else if (WIFSIGNALED(etat_fils))
             {
+                // printf("WIFSIGNALED %d\n", pid_fils);
                 /* traiter signal */
                 pl_remove(&pl, pid_fils);
             }
@@ -59,7 +62,7 @@ void fwd_sig_stop(int sig)
 {
     if (!prompt)
     {
-        printf("fwd_sig_stop %d\n", pid_fils);
+        // printf("fwd_sig_stop %d\n", pid_fils);
         kill(pid_fils, SIGSTOP);
     }
 }
@@ -68,7 +71,7 @@ void fwd_sig_kill(int sig)
 {
     if (!prompt)
     {
-        printf("fwd_sig_kill %d\n", pid_fils);
+        // printf("fwd_sig_kill %d\n", pid_fils);
         kill(pid_fils, SIGKILL);
     }
 }

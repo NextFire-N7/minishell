@@ -30,12 +30,13 @@ int pl_add(struct process **pl, pid_t pid, char **cmd)
 
 void pl_remove(struct process **pl, pid_t pid)
 {
-    if (!(*pl)->prec)
+    if ((*pl)->pid == pid) // celui à retirer est en tête
     {
+        struct process *prec = (*pl)->prec;
         free(*pl);
-        *pl = NULL;
+        *pl = prec;
     }
-    else
+    else // il est qque part au milieu
     {
         if ((*pl)->prec->pid != pid)
         {
