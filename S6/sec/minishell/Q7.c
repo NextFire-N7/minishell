@@ -77,29 +77,6 @@ void fwd_sig_kill(int sig)
     }
 }
 
-int redirections(struct cmdline cmdl)
-{
-    if (cmdl.in)
-    {
-        int fd_in = open(cmdl.in, O_RDONLY);
-        if (fd_in == -1)
-        {
-            return -1;
-        }
-        dup2(fd_in, STDIN_FILENO);
-    }
-    if (cmdl.out)
-    {
-        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT, 600);
-        if (fd_out == -1)
-        {
-            return -1;
-        }
-        dup2(fd_out, STDOUT_FILENO);
-    }
-    return 0;
-}
-
 int main(int argc, char const *argv[])
 {
     struct sigaction handler_sigchld, handler_fwd_stop, handler_fwd_kill, handler_mask;
@@ -138,10 +115,6 @@ int main(int argc, char const *argv[])
             {
                 sigaction(SIGTSTP, &handler_mask, NULL);
                 sigaction(SIGINT, &handler_mask, NULL);
-                if (redirections(*cmdl) == -1)
-                {
-                    perror("redirections");
-                }
                 execvp(cmdl->seq[0][0], cmdl->seq[0]);
                 perror(cmdl->seq[0][0]);
                 exit(getpid());
