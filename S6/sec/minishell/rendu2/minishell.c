@@ -162,7 +162,7 @@ int main(int argc, char const *argv[])
                 if (pid_fils == -1)
                 {
                     perror("fork");
-                    continue;
+                    break;
                 }
                 if (pid_fils == 0)
                 {
