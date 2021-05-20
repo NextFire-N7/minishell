@@ -9,10 +9,10 @@ q1: q1.c readcmd.c
 q3: q3.c readcmd.c
 	gcc -o $@ $^ -Wall -Werror
 
-q4: q4.c readcmd.c builtin.c
+q4: q4.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
 
-q5: q5.c readcmd.c builtin.c
+q5: q5.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
 
 q6: q6.c readcmd.c builtin.c process.c
