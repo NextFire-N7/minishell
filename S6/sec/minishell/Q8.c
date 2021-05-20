@@ -90,7 +90,7 @@ int redirections(struct cmdline cmdl)
     }
     if (cmdl.out)
     {
-        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT, 600);
+        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT, 0644);
         if (fd_out == -1)
         {
             return -1;
