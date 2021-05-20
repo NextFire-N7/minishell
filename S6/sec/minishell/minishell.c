@@ -12,6 +12,7 @@
 struct process *pl = NULL;
 pid_t pid_fils;
 int in_prompt;
+int fd_stdin, fd_stdout;
 
 void suivi_fils(int sig)
 {
@@ -90,7 +91,7 @@ int redirections(struct cmdline cmdl)
     }
     if (cmdl.out)
     {
-        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT, 0644);
+        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd_out == -1)
         {
             return -1;
@@ -112,11 +113,17 @@ int main(int argc, char const *argv[])
     sigaction(SIGTSTP, &handler_fwd_stop, NULL);
     sigaction(SIGINT, &handler_fwd_kill, NULL);
 
+    fd_stdin = dup(STDIN_FILENO);
+    fd_stdout = dup(STDOUT_FILENO);
+
     struct cmdline *cmdl;
     char cwd[1024];
     int id;
     while (1)
     {
+        dup2(fd_stdin, STDIN_FILENO);
+        dup2(fd_stdin, STDOUT_FILENO);
+
         getcwd(cwd, sizeof(cwd));
         printf("%s$ ", cwd);
         in_prompt = 1;
@@ -126,22 +133,24 @@ int main(int argc, char const *argv[])
         } while (!cmdl || !cmdl->seq[0]);
         in_prompt = 0;
 
+        if (redirections(*cmdl) == -1)
+        {
+            perror("redirections");
+            continue;
+        }
+
         if (!builtin(&pl, cmdl->seq[0]))
         {
             pid_fils = fork();
             if (pid_fils == -1)
             {
                 perror("fork");
-                break;
+                continue;
             }
             if (pid_fils == 0)
             {
                 sigaction(SIGTSTP, &handler_mask, NULL);
                 sigaction(SIGINT, &handler_mask, NULL);
-                if (redirections(*cmdl) == -1)
-                {
-                    perror("redirections");
-                }
                 execvp(cmdl->seq[0][0], cmdl->seq[0]);
                 perror(cmdl->seq[0][0]);
                 exit(getpid());
