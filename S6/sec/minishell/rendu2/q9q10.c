@@ -9,6 +9,10 @@
 #include "builtin.h"
 #include "process.h"
 
+#define MAX_PIPES 10
+#define GREEN "\x1B[32m"
+#define RESET "\x1B[0m"
+
 struct process *pl = NULL;
 pid_t pid_fils;
 int in_prompt;
@@ -117,18 +121,18 @@ int main(int argc, char const *argv[])
     fd_stdout = dup(STDOUT_FILENO);
 
     struct cmdline *cmdl;
-    char cwd[1024];
+    char *cwd;
     int id;
     int i;
-    int pipes[10][2];
+    int pipes[MAX_PIPES][2];
 
     while (1)
     {
         dup2(fd_stdin, STDIN_FILENO);
         dup2(fd_stdin, STDOUT_FILENO);
 
-        getcwd(cwd, sizeof(cwd));
-        printf("%s$ ", cwd);
+        cwd = getcwd(NULL, 0);
+        printf(GREEN "%s" RESET "$ ", cwd);
         in_prompt = 1;
         do
         {
