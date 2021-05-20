@@ -48,20 +48,20 @@ void pl_remove(struct process **pl, pid_t pid)
     }
 }
 
-struct process **pl_get_id(struct process **pl, int id)
+struct process **pl_get_by_id(struct process **pl, int id)
 {
     if ((*pl)->id == id)
     {
         return pl;
     }
-    return pl_get_id(&(*pl)->prec, id);
+    return pl_get_by_id(&(*pl)->prec, id);
 }
 
-struct process **pl_get_pid(struct process **pl, pid_t pid)
+struct process **pl_get_by_pid(struct process **pl, pid_t pid)
 {
     if ((*pl)->pid == pid)
     {
         return pl;
     }
-    return pl_get_pid(&(*pl)->prec, pid);
+    return pl_get_by_pid(&(*pl)->prec, pid);
 }

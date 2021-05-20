@@ -34,14 +34,14 @@ void suivi_fils(int sig)
             if (WIFSTOPPED(etat_fils))
             {
                 /* traiter la suspension */
-                struct process **p_stopped = pl_get_pid(&pl, pid_fils);
+                struct process **p_stopped = pl_get_by_pid(&pl, pid_fils);
                 (*p_stopped)->is_running = STOPPED;
                 printf("[%d] %d: %s — Stopped\n", (*p_stopped)->id, (*p_stopped)->pid, (*p_stopped)->cmd);
             }
             else if (WIFCONTINUED(etat_fils))
             {
                 /* traiter la reprise */
-                struct process **p_started = pl_get_pid(&pl, pid_fils);
+                struct process **p_started = pl_get_by_pid(&pl, pid_fils);
                 (*p_started)->is_running = RUNNING;
                 printf("[%d] %d: %s\n", (*p_started)->id, (*p_started)->pid, (*p_started)->cmd);
             }

@@ -19,8 +19,8 @@ int pl_add(struct process **pl, pid_t pid, char **cmd);
 
 void pl_remove(struct process **pl, pid_t pid);
 
-struct process **pl_get_id(struct process **pl, int id);
+struct process **pl_get_by_id(struct process **pl, int id);
 
-struct process **pl_get_pid(struct process **pl, pid_t pid);
+struct process **pl_get_by_pid(struct process **pl, pid_t pid);
 
 #endif

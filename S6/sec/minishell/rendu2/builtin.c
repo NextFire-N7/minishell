@@ -20,13 +20,13 @@ void jobs(struct process **pl, char **cmd)
 
 void stop(struct process **pl, char **cmd)
 {
-    struct process **p_to_stop = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
+    struct process **p_to_stop = (cmd[1]) ? pl_get_by_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_stop)->pid, SIGSTOP);
 }
 
 void cont(struct process **pl, char **cmd)
 {
-    struct process **p_to_bg = (cmd[1]) ? pl_get_id(pl, atoi(cmd[1])) : pl;
+    struct process **p_to_bg = (cmd[1]) ? pl_get_by_id(pl, atoi(cmd[1])) : pl;
     kill((*p_to_bg)->pid, SIGCONT);
     (*p_to_bg)->is_running = RUNNING;
     printf("[%d] %d: %s\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
