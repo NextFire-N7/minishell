@@ -10,7 +10,7 @@
 
 struct process *pl = NULL;
 pid_t pid_fils;
-int prompt;
+int in_prompt;
 
 void suivi_fils(int sig)
 {
@@ -60,7 +60,8 @@ void suivi_fils(int sig)
 
 void fwd_sig_stop(int sig)
 {
-    if (!prompt)
+    printf("\n");
+    if (!in_prompt)
     {
         // printf("fwd_sig_stop %d\n", pid_fils);
         kill(pid_fils, SIGSTOP);
@@ -69,7 +70,8 @@ void fwd_sig_stop(int sig)
 
 void fwd_sig_kill(int sig)
 {
-    if (!prompt)
+    printf("\n");
+    if (!in_prompt)
     {
         // printf("fwd_sig_kill %d\n", pid_fils);
         kill(pid_fils, SIGKILL);
@@ -97,13 +99,13 @@ int main(int argc, char const *argv[])
     while (1)
     {
         getcwd(cwd, sizeof(cwd));
-        printf("%s$ ", cwd);
-        prompt = 1;
+        in_prompt = 1;
         do
         {
+            printf("%s$ ", cwd);
             cmd = readcmd();
         } while (!cmd || !cmd->seq[0]);
-        prompt = 0;
+        in_prompt = 0;
 
         if (!builtin(&pl, cmd->seq[0]))
         {
@@ -117,7 +119,7 @@ int main(int argc, char const *argv[])
                 sigaction(SIGTSTP, &handler_mask, NULL);
                 sigaction(SIGINT, &handler_mask, NULL);
                 execvp(cmd->seq[0][0], cmd->seq[0]);
-                printf("%s\n", cmd->err);
+                perror(cmd->seq[0][0]);
                 exit(getpid());
                 break;
 
