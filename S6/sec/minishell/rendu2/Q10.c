@@ -1,5 +1,3 @@
-// Question 10 (Pipelines)
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -99,30 +97,58 @@ static void fwd_sig_kill(int sig)
     }
 }
 
-// mets en place les redirections
-static int redirections(struct cmdline cmdl)
+static int redirections(struct cmdline cmdl, int i)
 {
-    // en input
-    if (cmdl.in)
+    static int pipes[MAX_PIPES][2];
+
+    if (i == 0)
     {
-        int fd_in = open(cmdl.in, O_RDONLY);
-        if (fd_in == -1)
+        // entree premiere commande
+        if (cmdl.in)
         {
-            return -1;
+            int fd_in = open(cmdl.in, O_RDONLY);
+            if (fd_in == -1)
+            {
+                return -1;
+            }
+            dup2(fd_in, STDIN_FILENO);
         }
-        dup2(fd_in, STDIN_FILENO);
+    }
+    else
+    {
+        // entree commandes suivantes
+        dup2(pipes[i - 1][0], STDIN_FILENO); // branchement stdin sur sortie pipe precedent
+        close(pipes[i - 1][0]);
     }
 
-    // en output
-    if (cmdl.out)
+    if (!cmdl.seq[i + 1])
     {
-        int fd_out = open(cmdl.out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        if (fd_out == -1)
+        // sortie derniere commande
+        if (cmdl.out)
+        {
+            int fd_out = open(cmdl.out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd_out == -1)
+            {
+                return -1;
+            }
+            dup2(fd_out, STDOUT_FILENO);
+        }
+        else
+        {
+            dup2(fd_stdout, STDOUT_FILENO);
+        }
+    }
+    else
+    {
+        // sorties commandes precedentes
+        if (pipe(pipes[i]) == -1)
         {
             return -1;
         }
-        dup2(fd_out, STDOUT_FILENO);
+        dup2(pipes[i][1], STDOUT_FILENO); // branchement stdout sur entree nouveau pipe
+        close(pipes[i][1]);
     }
+
     return 0;
 }
 
@@ -149,11 +175,10 @@ int main(int argc, char const *argv[])
     pid_t pid_fils;
     int id;
     int i;
-    int pipes[MAX_PIPES][2];
 
     while (1)
     {
-        // restauration du stdin et stdout en entree du prompt
+        // restauration du stdin et stdout
         dup2(fd_stdin, STDIN_FILENO);
         dup2(fd_stdin, STDOUT_FILENO);
 
@@ -171,36 +196,20 @@ int main(int argc, char const *argv[])
             continue;
         }
 
-        // mise en place des redirections
-        if (redirections(*cmdl) == -1)
-        {
-            perror("redirections");
-            continue;
-        }
-
         // iteration sur les commandes
         i = -1;
         while (cmdl->seq[++i])
         {
-            // creation pipe si cmd suivante existe
-            if (cmdl->seq[i + 1])
+            // redirections et pipes
+            if (redirections(*cmdl, i) == -1)
             {
-                if (pipe(pipes[i]) == -1)
-                {
-                    perror("pipe");
-                    break;
-                }
+                perror("redirections");
+                break;
             }
 
-            // fermeture entree pipe precedent
-            if (i > 0)
-            {
-                close(pipes[i - 1][1]);
-            }
-
-            // fork si pas une commande built-in
             if (!builtin(&pl, cmdl->seq[i], &pid_fg))
             {
+                // fork si pas une commande built-in
                 pid_fils = fork();
                 if (pid_fils == -1)
                 {
@@ -212,15 +221,6 @@ int main(int argc, char const *argv[])
                     // masquage SIGTSTP et SIGINT
                     sigaction(SIGTSTP, &handler_mask, NULL);
                     sigaction(SIGINT, &handler_mask, NULL);
-                    // mise en place pipes entree sortie
-                    if (i > 0)
-                    {
-                        dup2(pipes[i - 1][0], STDIN_FILENO);
-                    }
-                    if (cmdl->seq[i + 1])
-                    {
-                        dup2(pipes[i][1], STDOUT_FILENO);
-                    }
                     // exec
                     execvp(cmdl->seq[i][0], cmdl->seq[i]);
                     // si fail
@@ -229,11 +229,6 @@ int main(int argc, char const *argv[])
                 }
                 else // pere
                 {
-                    // fermeture pipe que le pere ne lit pas
-                    if (i > 0)
-                    {
-                        close(pipes[i - 1][0]);
-                    }
                     // ajout du process dans la liste
                     id = pl_add(&pl, pid_fils, cmdl->seq[i]);
                     // gestion bg ou pas

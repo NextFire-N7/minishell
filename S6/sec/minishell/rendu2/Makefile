@@ -24,9 +24,6 @@ Q7: Q7.c readcmd.c builtin.c process.c
 Q8: Q8.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
 
-Q9: Q9.c readcmd.c builtin.c process.c
-	gcc -o $@ $^ -Wall -Werror
-
 Q10: Q10.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
 
