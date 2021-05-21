@@ -1,3 +1,5 @@
+// Question 7 (SIGINT)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

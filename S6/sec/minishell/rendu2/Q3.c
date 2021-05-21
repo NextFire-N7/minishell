@@ -1,3 +1,5 @@
+// Question 3 (Enchainement sequentiel des commandes)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

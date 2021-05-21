@@ -1,3 +1,5 @@
+// Question 6 (Gerer les processus lances depuis le shell)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

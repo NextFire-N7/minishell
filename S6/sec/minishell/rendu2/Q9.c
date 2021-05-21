@@ -1,3 +1,5 @@
+// Question 9 (Tubes simples)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 #include "builtin.h"
 #include "process.h"
 
-#define MAX_PIPES 10     // jamais vu plus de 5 pipes en une cmd...
 #define GREEN "\x1B[32m" // pour que le prompt soit joli
 #define RESET "\x1B[0m"  // reset la couleur
 
@@ -141,8 +142,7 @@ int main(int argc, char const *argv[])
     struct cmdline *cmdl;
     pid_t pid_fils;
     int id;
-    int i;
-    int pipes[MAX_PIPES][2];
+    int pipes[2];
 
     while (1)
     {
@@ -171,73 +171,97 @@ int main(int argc, char const *argv[])
             continue;
         }
 
-        // iteration sur les commandes
-        i = -1;
-        while (cmdl->seq[++i])
+        // creation pipe si cmd suivante existe
+        if (cmdl->seq[1])
         {
-            // creation pipe si cmd suivante existe
-            if (cmdl->seq[i + 1])
+            if (pipe(pipes) == -1)
             {
-                if (pipe(pipes[i]) == -1)
-                {
-                    perror("pipe");
-                    break;
-                }
+                perror("pipe");
+                break;
             }
+        }
 
-            // fermeture entree pipe precedent
-            if (i > 0)
+        // fork si pas une commande built-in
+        if (!builtin(&pl, cmdl->seq[0], &pid_fg))
+        {
+            pid_fils = fork();
+            if (pid_fils == -1)
             {
-                close(pipes[i - 1][1]);
+                perror("fork");
+                break;
             }
-
-            // fork si pas une commande built-in
-            if (!builtin(&pl, cmdl->seq[i], &pid_fg))
+            if (!pid_fils) // fils
             {
-                pid_fils = fork();
-                if (pid_fils == -1)
+                // masquage SIGTSTP et SIGINT
+                sigaction(SIGTSTP, &handler_mask, NULL);
+                sigaction(SIGINT, &handler_mask, NULL);
+                // mise en place pipe sortie
+                if (cmdl->seq[1])
                 {
-                    perror("fork");
-                    break;
+                    dup2(pipes[1], STDOUT_FILENO);
                 }
-                if (!pid_fils) // fils
+                // exec
+                execvp(cmdl->seq[0][0], cmdl->seq[0]);
+                // si fail
+                perror(cmdl->seq[0][0]);
+                exit(getpid());
+            }
+            else // pere
+            {
+                // fermeture pipe que le pere n'écrit pas
+                close(pipes[1]);
+                // ajout du process dans la liste
+                id = pl_add(&pl, pid_fils, cmdl->seq[0]);
+                // gestion bg ou pas
+                if (cmdl->backgrounded)
                 {
-                    // masquage SIGTSTP et SIGINT
-                    sigaction(SIGTSTP, &handler_mask, NULL);
-                    sigaction(SIGINT, &handler_mask, NULL);
-                    // mise en place pipes entree sortie
-                    if (i > 0)
-                    {
-                        dup2(pipes[i - 1][0], STDIN_FILENO);
-                    }
-                    if (cmdl->seq[i + 1])
-                    {
-                        dup2(pipes[i][1], STDOUT_FILENO);
-                    }
-                    // exec
-                    execvp(cmdl->seq[i][0], cmdl->seq[i]);
-                    // si fail
-                    perror(cmdl->seq[i][0]);
-                    exit(getpid());
+                    printf("[%d] %d\n", id, pid_fils);
                 }
-                else // pere
+                else
                 {
-                    // fermeture pipe que le pere ne lit pas
-                    if (i > 0)
+                    pid_fg = pid_fils;
+                    pause();
+                }
+                if (cmdl->seq[1]) // 2e commande
+                {
+                    if (!builtin(&pl, cmdl->seq[1], &pid_fg))
                     {
-                        close(pipes[i - 1][0]);
-                    }
-                    // ajout du process dans la liste
-                    id = pl_add(&pl, pid_fils, cmdl->seq[i]);
-                    // gestion bg ou pas
-                    if (cmdl->backgrounded)
-                    {
-                        printf("[%d] %d\n", id, pid_fils);
-                    }
-                    else
-                    {
-                        pid_fg = pid_fils;
-                        pause();
+                        pid_fils = fork();
+                        if (pid_fils == -1)
+                        {
+                            perror("fork");
+                            break;
+                        }
+                        if (!pid_fils) // fils
+                        {
+                            // masquage SIGTSTP et SIGINT
+                            sigaction(SIGTSTP, &handler_mask, NULL);
+                            sigaction(SIGINT, &handler_mask, NULL);
+                            // mise en place pipe entree
+                            dup2(pipes[0], STDIN_FILENO);
+                            // exec
+                            execvp(cmdl->seq[1][0], cmdl->seq[1]);
+                            // si fail
+                            perror(cmdl->seq[1][0]);
+                            exit(getpid());
+                        }
+                        else // pere
+                        {
+                            // fermeture pipe que le pere ne lit pas
+                            close(pipes[0]);
+                            // ajout du process dans la liste
+                            id = pl_add(&pl, pid_fils, cmdl->seq[1]);
+                            // gestion bg ou pas
+                            if (cmdl->backgrounded)
+                            {
+                                printf("[%d] %d\n", id, pid_fils);
+                            }
+                            else
+                            {
+                                pid_fg = pid_fils;
+                                pause();
+                            }
+                        }
                     }
                 }
             }

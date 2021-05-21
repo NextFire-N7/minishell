@@ -1,3 +1,5 @@
+// Question 8 (Redirections)
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
