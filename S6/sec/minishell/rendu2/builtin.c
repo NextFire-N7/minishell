@@ -7,8 +7,6 @@
 #include <signal.h>
 #include "process.h"
 
-extern pid_t pid_bg; // defini dans minishell.c
-
 static void jobs(struct process **pl, char **cmd)
 {
     if (!*pl)
@@ -55,17 +53,17 @@ static void bg(struct process **pl, char **cmd)
     cont(pl, cmd);
 }
 
-static void fg(struct process **pl, char **cmd)
+static void fg(struct process **pl, char **cmd, pid_t *pid_bg)
 {
     pid_t pid = cont(pl, cmd);
     if (pid != -1)
     {
-        pid_bg = pid;
+        *pid_bg = pid;
         pause();
     }
 }
 
-int builtin(struct process **pl, char **cmd)
+int builtin(struct process **pl, char **cmd, pid_t *pid_bg)
 {
     int is_builtin = 1;
     if (strcmp(cmd[0], "cd") == 0)
@@ -90,7 +88,7 @@ int builtin(struct process **pl, char **cmd)
     }
     else if (strcmp(cmd[0], "fg") == 0)
     {
-        fg(pl, cmd);
+        fg(pl, cmd, pid_bg);
     }
     else
     {

@@ -14,7 +14,7 @@
 #define RESET "\x1B[0m"  // reset la couleur
 
 static struct process *pl = NULL; // liste chainee des processus
-pid_t pid_bg;                     // pid du processus en bg
+static pid_t pid_bg;              // pid du processus en bg
 static int fd_stdin, fd_stdout;   // backup des fd stdin et stdout
 
 static void suivi_fils(int sig)
@@ -185,7 +185,7 @@ int main(int argc, char const *argv[])
             }
 
             // fork si pas une commande built-in
-            if (!builtin(&pl, cmdl->seq[i]))
+            if (!builtin(&pl, cmdl->seq[i], &pid_bg))
             {
                 pid_fils = fork();
                 if (pid_fils == -1)

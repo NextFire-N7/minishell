@@ -3,6 +3,6 @@
 
 #include "process.h"
 
-int builtin(struct process **pl, char **cmd);
+int builtin(struct process **pl, char **cmd, pid_t *pid_bg);
 
 #endif
