@@ -53,6 +53,11 @@ static void suivi_fils(int sig)
                 /* traiter signal */
                 pl_remove(&pl, pid_fils);
             }
+            if (pid_fg && pid_fils != pid_fg)
+            {
+                /* reprise attente processus avant plan */
+                pause();
+            }
         }
     } while (pid_fils > 0);
     /* autres actions après le suivi des changements d'état */
