@@ -174,7 +174,6 @@ int main(int argc, char const *argv[])
     struct cmdline *cmdl;
     pid_t pid_fils;
     int id;
-    int i;
 
     while (1)
     {
@@ -197,8 +196,7 @@ int main(int argc, char const *argv[])
         }
 
         // iteration sur les commandes
-        i = -1;
-        while (cmdl->seq[++i])
+        for (int i = 0; cmdl->seq[i]; i++)
         {
             // redirections et pipes
             if (redirections(*cmdl, i) == -1)

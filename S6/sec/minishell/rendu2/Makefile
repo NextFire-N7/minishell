@@ -1,4 +1,4 @@
-all: minishell Q1 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10
+all: minishell Q1 Q3 Q4 Q5 Q6 Q7 Q8 Q10
 
 minishell: minishell.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
@@ -28,4 +28,4 @@ Q10: Q10.c readcmd.c builtin.c process.c
 	gcc -o $@ $^ -Wall -Werror
 
 clean:
-	rm -f minishell Q1 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10
+	rm -f minishell Q1 Q3 Q4 Q5 Q6 Q7 Q8 Q10
