@@ -13,12 +13,11 @@
 #define GREEN "\x1B[32m"
 #define RESET "\x1B[0m"
 
-struct process *pl = NULL;
-pid_t pid_fils;
-int in_prompt;
-int fd_stdin, fd_stdout;
+static struct process *pl = NULL; // Liste chaînée des processus
+pid_t pid_bg;                     // pid du process en bg
+static int fd_stdin, fd_stdout;
 
-void suivi_fils(int sig)
+static void suivi_fils(int sig)
 {
     int etat_fils, pid_fils;
     do
@@ -60,23 +59,38 @@ void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
-void fwd_sig_stop(int sig)
+static void print_prompt()
 {
-    if (!in_prompt)
+    printf(GREEN "%s" RESET "$ ", getcwd(NULL, 0));
+}
+
+static void fwd_sig_stop(int sig)
+{
+    printf("\n");
+    if (pid_bg)
     {
-        kill(pid_fils, SIGSTOP);
+        kill(pid_bg, SIGSTOP);
+    }
+    else
+    {
+        print_prompt();
     }
 }
 
-void fwd_sig_kill(int sig)
+static void fwd_sig_kill(int sig)
 {
-    if (!in_prompt)
+    printf("\n");
+    if (pid_bg)
     {
-        kill(pid_fils, SIGKILL);
+        kill(pid_bg, SIGKILL);
+    }
+    else
+    {
+        print_prompt();
     }
 }
 
-int redirections(struct cmdline cmdl)
+static int redirections(struct cmdline cmdl)
 {
     if (cmdl.in)
     {
@@ -115,7 +129,7 @@ int main(int argc, char const *argv[])
     fd_stdout = dup(STDOUT_FILENO);
 
     struct cmdline *cmdl;
-    char *cwd;
+    pid_t pid_fils;
     int id;
     int i;
     int pipes[MAX_PIPES][2];
@@ -125,14 +139,12 @@ int main(int argc, char const *argv[])
         dup2(fd_stdin, STDIN_FILENO);
         dup2(fd_stdin, STDOUT_FILENO);
 
-        cwd = getcwd(NULL, 0);
-        printf(GREEN "%s" RESET "$ ", cwd);
-        in_prompt = 1;
+        pid_bg = 0;
+        print_prompt();
         do
         {
             cmdl = readcmd();
         } while (!cmdl || !cmdl->seq);
-        in_prompt = 0;
 
         if (redirections(*cmdl) == -1)
         {
@@ -162,7 +174,7 @@ int main(int argc, char const *argv[])
                     perror("fork");
                     break;
                 }
-                if (pid_fils == 0)
+                if (!pid_fils)
                 {
                     sigaction(SIGTSTP, &handler_mask, NULL);
                     sigaction(SIGINT, &handler_mask, NULL);
@@ -191,6 +203,7 @@ int main(int argc, char const *argv[])
                     }
                     else
                     {
+                        pid_bg = pid_fils;
                         pause();
                     }
                 }
