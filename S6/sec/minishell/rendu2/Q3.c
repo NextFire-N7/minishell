@@ -1,36 +1,55 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <stdlib.h>
-#include <errno.h>
 #include "readcmd.h"
+
+#define GREEN "\x1B[32m" // pour que le prompt soit joli
+#define RESET "\x1B[0m"  // reset la couleur
+
+// prompt
+static void print_prompt()
+{
+    printf(GREEN "%s" RESET "$ ", getcwd(NULL, 0));
+}
 
 int main(int argc, char const *argv[])
 {
-    struct cmdline *cmd;
+    // variables locales
+    struct cmdline *cmdl;
     pid_t pid_fils;
+
     while (1)
     {
-        printf("$ ");
-        cmd = readcmd();
-
-        switch (pid_fils = fork())
+        print_prompt(); // affichage prompt
+        do
         {
-        case -1:
-            perror("fork");
-            break;
+            cmdl = readcmd(); // lecture de la ligne de cmd
+        } while (!cmdl);
 
-        case 0:
-            execvp(cmd->seq[0][0], cmd->seq[0]);
-            printf("%s\n", cmd->err);
-            exit(getpid());
-            break;
-
-        default:
+        // affichage erreurs cmdl
+        if (cmdl->err)
         {
-            wait(NULL);
-            break;
+            fprintf(stderr, "%s\n", cmdl->err);
+            continue;
         }
+
+        pid_fils = fork();
+        if (pid_fils == -1)
+        {
+            perror("fork");
+            continue;
+        }
+        if (!pid_fils) // fils
+        {
+            // exec
+            execvp(cmdl->seq[0][0], cmdl->seq[0]);
+            // si fail
+            perror(cmdl->seq[0][0]);
+            exit(getpid());
+        }
+        else // pere
+        {
+            pause();
         }
     }
 

@@ -3,7 +3,8 @@
  */
  
 /*
- * Backgrounding added. [PM] Ajout d'une rustine nécessaire : lignes 153 et 293 commentées
+ * Backgrounding added. [PM, 17] Ajout d'une rustine nécessaire : lignes 154 et 298 commentées
+ * [ZH, 21] : ajout d'un test signalant l'impossibilité de redirections avec ajout (lignes 232-235) 
  */
 
 #include <stdio.h>
@@ -228,6 +229,10 @@ struct cmdline *readcmd(void)
 				s->err = "filename missing for output redirection";
 				goto error;
 			}
+			if (words[i][0] == '>') { 								// added 
+                s->err = "append to output file not supported";		// added
+                goto error;											// added
+            } 														// added
 			s->out = words[i++];
 			break;
 		case '|':

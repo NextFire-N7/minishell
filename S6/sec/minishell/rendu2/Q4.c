@@ -1,40 +1,59 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <signal.h>
 #include "readcmd.h"
 #include "builtin.h"
 
+#define GREEN "\x1B[32m" // pour que le prompt soit joli
+#define RESET "\x1B[0m"  // reset la couleur
+
+// prompt
+static void print_prompt()
+{
+    printf(GREEN "%s" RESET "$ ", getcwd(NULL, 0));
+}
+
 int main(int argc, char const *argv[])
 {
-    struct cmdline *cmd;
-    char cwd[1024];
+    // variables locales
+    struct cmdline *cmdl;
     pid_t pid_fils;
+
     while (1)
     {
-        getcwd(cwd, sizeof(cwd));
-        printf("%s$ ", cwd);
-        cmd = readcmd();
-
-        if (!builtin(NULL, cmd->seq[0], NULL))
+        print_prompt(); // affichage prompt
+        do
         {
-            switch (pid_fils = fork())
+            cmdl = readcmd(); // lecture de la ligne de cmd
+        } while (!cmdl);
+
+        // affichage erreurs cmdl
+        if (cmdl->err)
+        {
+            fprintf(stderr, "%s\n", cmdl->err);
+            continue;
+        }
+
+        // fork si pas une commande built-in
+        if (!builtin(NULL, cmdl->seq[0], NULL))
+        {
+            pid_fils = fork();
+            if (pid_fils == -1)
             {
-            case -1:
                 perror("fork");
-                break;
-
-            case 0:
-                execvp(cmd->seq[0][0], cmd->seq[0]);
-                printf("%s\n", cmd->err);
+                continue;
+            }
+            if (!pid_fils) // fils
+            {
+                // exec
+                execvp(cmdl->seq[0][0], cmdl->seq[0]);
+                // si fail
+                perror(cmdl->seq[0][0]);
                 exit(getpid());
-                break;
-
-            default:
-                wait(NULL);
-                break;
+            }
+            else // pere
+            {
+                pause();
             }
         }
     }

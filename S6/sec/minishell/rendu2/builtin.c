@@ -1,11 +1,9 @@
 #include "builtin.h"
 
 #include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
-#include "process.h"
 
 static void jobs(struct process **pl, char **cmd)
 {
@@ -53,17 +51,17 @@ static void bg(struct process **pl, char **cmd)
     cont(pl, cmd);
 }
 
-static void fg(struct process **pl, char **cmd, pid_t *pid_bg)
+static void fg(struct process **pl, char **cmd, pid_t *pid_fg)
 {
     pid_t pid = cont(pl, cmd);
     if (pid != -1)
     {
-        *pid_bg = pid;
+        *pid_fg = pid;
         pause();
     }
 }
 
-int builtin(struct process **pl, char **cmd, pid_t *pid_bg)
+int builtin(struct process **pl, char **cmd, pid_t *pid_fg)
 {
     int is_builtin = 1;
     if (strcmp(cmd[0], "cd") == 0)
@@ -88,7 +86,7 @@ int builtin(struct process **pl, char **cmd, pid_t *pid_bg)
     }
     else if (strcmp(cmd[0], "fg") == 0)
     {
-        fg(pl, cmd, pid_bg);
+        fg(pl, cmd, pid_fg);
     }
     else
     {

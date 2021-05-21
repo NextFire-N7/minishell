@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <signal.h>
@@ -14,7 +13,7 @@
 #define RESET "\x1B[0m"  // reset la couleur
 
 static struct process *pl = NULL; // liste chainee des processus
-static pid_t pid_bg;              // pid du processus en bg
+static pid_t pid_fg;              // pid du processus en fg
 static int fd_stdin, fd_stdout;   // backup des fd stdin et stdout
 
 static void suivi_fils(int sig)
@@ -69,9 +68,9 @@ static void print_prompt()
 static void fwd_sig_stop(int sig)
 {
     printf("\n");
-    if (pid_bg)
+    if (pid_fg)
     {
-        kill(pid_bg, SIGSTOP);
+        kill(pid_fg, SIGSTOP);
     }
     else
     {
@@ -83,9 +82,9 @@ static void fwd_sig_stop(int sig)
 static void fwd_sig_kill(int sig)
 {
     printf("\n");
-    if (pid_bg)
+    if (pid_fg)
     {
-        kill(pid_bg, SIGKILL);
+        kill(pid_fg, SIGKILL);
     }
     else
     {
@@ -151,12 +150,19 @@ int main(int argc, char const *argv[])
         dup2(fd_stdin, STDIN_FILENO);
         dup2(fd_stdin, STDOUT_FILENO);
 
-        pid_bg = 0;     // plus de process en avant-plan
+        pid_fg = 0;     // pas de processus en avant-plan
         print_prompt(); // affichage prompt
         do
         {
             cmdl = readcmd(); // lecture de la ligne de cmd
-        } while (!cmdl || !cmdl->seq);
+        } while (!cmdl);
+
+        // affichage erreurs cmdl
+        if (cmdl->err)
+        {
+            fprintf(stderr, "%s\n", cmdl->err);
+            continue;
+        }
 
         // mise en place des redirections
         if (redirections(*cmdl) == -1)
@@ -175,6 +181,7 @@ int main(int argc, char const *argv[])
                 if (pipe(pipes[i]) == -1)
                 {
                     perror("pipe");
+                    break;
                 }
             }
 
@@ -185,7 +192,7 @@ int main(int argc, char const *argv[])
             }
 
             // fork si pas une commande built-in
-            if (!builtin(&pl, cmdl->seq[i], &pid_bg))
+            if (!builtin(&pl, cmdl->seq[i], &pid_fg))
             {
                 pid_fils = fork();
                 if (pid_fils == -1)
@@ -229,7 +236,7 @@ int main(int argc, char const *argv[])
                     }
                     else
                     {
-                        pid_bg = pid_fils;
+                        pid_fg = pid_fils;
                         pause();
                     }
                 }
