@@ -4,6 +4,7 @@
 
 static int id = 1;
 
+// copie la cmd sous forme de tableau en une unique chaine
 static char *cmd_to_string(char **cmd)
 {
     char *string = malloc((strlen(cmd[0]) + 1) * sizeof(char));

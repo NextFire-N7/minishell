@@ -7,7 +7,7 @@
 #include <signal.h>
 #include "process.h"
 
-extern pid_t pid_bg;
+extern pid_t pid_bg; // defini dans minishell.c
 
 static void jobs(struct process **pl, char **cmd)
 {

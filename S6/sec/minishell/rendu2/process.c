@@ -1,11 +1,11 @@
 #include "process.h"
-
 #include <stdlib.h>
 #include <string.h>
 
-int id = 1;
+static int id = 1;
 
-char *cmd_to_string(char **cmd)
+// copie la cmd sous forme de tableau en une unique chaine
+static char *cmd_to_string(char **cmd)
 {
     char *string = malloc((strlen(cmd[0]) + 1) * sizeof(char));
     strcpy(string, cmd[0]);
@@ -51,7 +51,7 @@ void pl_remove(struct process **pl, pid_t pid)
 
 struct process **pl_get_by_id(struct process **pl, int id)
 {
-    if ((*pl)->id == id)
+    if (!*pl || (*pl)->id == id)
     {
         return pl;
     }
@@ -60,7 +60,7 @@ struct process **pl_get_by_id(struct process **pl, int id)
 
 struct process **pl_get_by_pid(struct process **pl, pid_t pid)
 {
-    if ((*pl)->pid == pid)
+    if (!*pl || (*pl)->pid == pid)
     {
         return pl;
     }

@@ -9,13 +9,13 @@
 #include "builtin.h"
 #include "process.h"
 
-#define MAX_PIPES 10
-#define GREEN "\x1B[32m"
-#define RESET "\x1B[0m"
+#define MAX_PIPES 10     // jamais vu plus de 5 pipes en une cmd...
+#define GREEN "\x1B[32m" // pour que le prompt soit joli
+#define RESET "\x1B[0m"  // reset la couleur
 
-static struct process *pl = NULL; // Liste chaînée des processus
-pid_t pid_bg;                     // pid du process en bg
-static int fd_stdin, fd_stdout;
+static struct process *pl = NULL; // liste chainee des processus
+pid_t pid_bg;                     // pid du processus en bg
+static int fd_stdin, fd_stdout;   // backup des fd stdin et stdout
 
 static void suivi_fils(int sig)
 {
@@ -59,11 +59,13 @@ static void suivi_fils(int sig)
     /* autres actions après le suivi des changements d'état */
 }
 
+// prompt
 static void print_prompt()
 {
     printf(GREEN "%s" RESET "$ ", getcwd(NULL, 0));
 }
 
+// SIGSTP -> SIGSTOP
 static void fwd_sig_stop(int sig)
 {
     printf("\n");
@@ -77,6 +79,7 @@ static void fwd_sig_stop(int sig)
     }
 }
 
+// SIGINT -> SIGKILL
 static void fwd_sig_kill(int sig)
 {
     printf("\n");
@@ -90,8 +93,10 @@ static void fwd_sig_kill(int sig)
     }
 }
 
+// mets en place les redirections
 static int redirections(struct cmdline cmdl)
 {
+    // en input
     if (cmdl.in)
     {
         int fd_in = open(cmdl.in, O_RDONLY);
@@ -101,6 +106,8 @@ static int redirections(struct cmdline cmdl)
         }
         dup2(fd_in, STDIN_FILENO);
     }
+
+    // en output
     if (cmdl.out)
     {
         int fd_out = open(cmdl.out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -115,19 +122,23 @@ static int redirections(struct cmdline cmdl)
 
 int main(int argc, char const *argv[])
 {
+    // def des handlers
     struct sigaction handler_sigchld, handler_fwd_stop, handler_fwd_kill, handler_mask;
     handler_sigchld.sa_handler = suivi_fils;
     handler_fwd_stop.sa_handler = fwd_sig_stop;
     handler_fwd_kill.sa_handler = fwd_sig_kill;
     handler_mask.sa_handler = SIG_IGN;
 
+    // attribution des handlers
     sigaction(SIGCHLD, &handler_sigchld, NULL);
     sigaction(SIGTSTP, &handler_fwd_stop, NULL);
     sigaction(SIGINT, &handler_fwd_kill, NULL);
 
+    // backup des fd stdin/stdout originels
     fd_stdin = dup(STDIN_FILENO);
     fd_stdout = dup(STDOUT_FILENO);
 
+    // variables locales
     struct cmdline *cmdl;
     pid_t pid_fils;
     int id;
@@ -136,25 +147,29 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
+        // restauration du stdin et stdout en entree du prompt
         dup2(fd_stdin, STDIN_FILENO);
         dup2(fd_stdin, STDOUT_FILENO);
 
-        pid_bg = 0;
-        print_prompt();
+        pid_bg = 0;     // plus de process en avant-plan
+        print_prompt(); // affichage prompt
         do
         {
-            cmdl = readcmd();
+            cmdl = readcmd(); // lecture de la ligne de cmd
         } while (!cmdl || !cmdl->seq);
 
+        // mise en place des redirections
         if (redirections(*cmdl) == -1)
         {
             perror("redirections");
             continue;
         }
 
+        // iteration sur les commandes
         i = -1;
         while (cmdl->seq[++i])
         {
+            // creation pipe si cmd suivante existe
             if (cmdl->seq[i + 1])
             {
                 if (pipe(pipes[i]) == -1)
@@ -162,10 +177,14 @@ int main(int argc, char const *argv[])
                     perror("pipe");
                 }
             }
+
+            // fermeture entree pipe precedent
             if (i > 0)
             {
                 close(pipes[i - 1][1]);
             }
+
+            // fork si pas une commande built-in
             if (!builtin(&pl, cmdl->seq[i]))
             {
                 pid_fils = fork();
@@ -174,10 +193,12 @@ int main(int argc, char const *argv[])
                     perror("fork");
                     break;
                 }
-                if (!pid_fils)
+                if (!pid_fils) // fils
                 {
+                    // masquage SIGTSTP et SIGINT
                     sigaction(SIGTSTP, &handler_mask, NULL);
                     sigaction(SIGINT, &handler_mask, NULL);
+                    // mise en place pipes entree sortie
                     if (i > 0)
                     {
                         dup2(pipes[i - 1][0], STDIN_FILENO);
@@ -186,17 +207,22 @@ int main(int argc, char const *argv[])
                     {
                         dup2(pipes[i][1], STDOUT_FILENO);
                     }
+                    // exec
                     execvp(cmdl->seq[i][0], cmdl->seq[i]);
+                    // si fail
                     perror(cmdl->seq[i][0]);
                     exit(getpid());
                 }
-                else
+                else // pere
                 {
+                    // fermeture pipe que le pere ne lit pas
                     if (i > 0)
                     {
                         close(pipes[i - 1][0]);
                     }
+                    // ajout du process dans la liste
                     id = pl_add(&pl, pid_fils, cmdl->seq[i]);
+                    // gestion bg ou pas
                     if (cmdl->backgrounded)
                     {
                         printf("[%d] %d\n", id, pid_fils);

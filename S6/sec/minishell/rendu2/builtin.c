@@ -1,6 +1,5 @@
 
 #include "builtin.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,40 +7,62 @@
 #include <signal.h>
 #include "process.h"
 
-void jobs(struct process **pl, char **cmd)
+extern pid_t pid_bg; // defini dans minishell.c
+
+static void jobs(struct process **pl, char **cmd)
 {
+    if (!*pl)
+    {
+        fprintf(stderr, "jobs: There are no jobs\n");
+        return;
+    }
     struct process *curseur = *pl;
     puts("ID\tPID\tSTATE\tCOMMAND");
-    while (curseur != NULL)
+    while (curseur)
     {
         printf("%d\t%d\t%s\t%s\n", curseur->id, curseur->pid, (curseur->is_running) ? "Running" : "Stopped", curseur->cmd);
         curseur = curseur->prec;
     }
 }
 
-void stop(struct process **pl, char **cmd)
+static void stop(struct process **pl, char **cmd)
 {
     struct process **p_to_stop = (cmd[1]) ? pl_get_by_id(pl, atoi(cmd[1])) : pl;
+    if (!*p_to_stop)
+    {
+        fprintf(stderr, "fg: There are no suitable jobs\n");
+        return;
+    }
     kill((*p_to_stop)->pid, SIGSTOP);
 }
 
-void cont(struct process **pl, char **cmd)
+static pid_t cont(struct process **pl, char **cmd)
 {
-    struct process **p_to_bg = (cmd[1]) ? pl_get_by_id(pl, atoi(cmd[1])) : pl;
-    kill((*p_to_bg)->pid, SIGCONT);
-    (*p_to_bg)->is_running = RUNNING;
-    printf("[%d] %d: %s\n", (*p_to_bg)->id, (*p_to_bg)->pid, (*p_to_bg)->cmd);
+    struct process **p = (cmd[1]) ? pl_get_by_id(pl, atoi(cmd[1])) : pl;
+    if (!*p)
+    {
+        fprintf(stderr, "fg/bg: There are no suitable jobs\n");
+        return -1;
+    }
+    kill((*p)->pid, SIGCONT);
+    (*p)->is_running = RUNNING;
+    printf("[%d] %d: %s\n", (*p)->id, (*p)->pid, (*p)->cmd);
+    return (*p)->pid;
 }
 
-void bg(struct process **pl, char **cmd)
+static void bg(struct process **pl, char **cmd)
 {
     cont(pl, cmd);
 }
 
-void fg(struct process **pl, char **cmd)
+static void fg(struct process **pl, char **cmd)
 {
-    cont(pl, cmd);
-    pause();
+    pid_t pid = cont(pl, cmd);
+    if (pid != -1)
+    {
+        pid_bg = pid;
+        pause();
+    }
 }
 
 int builtin(struct process **pl, char **cmd)
